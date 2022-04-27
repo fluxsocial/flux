@@ -4,6 +4,7 @@
     @agent-click="onAgentClick"
     @perspective-click="onPerspectiveClick"
     @hide-notification-indicator="onHideNotificationIndicator"
+    @url-click="onLinkClick"    
   ></chat-view>
   <j-modal
     size="xs"
@@ -16,6 +17,35 @@
       :langAddress="profileLanguage"
       @openCompleteProfile="() => handleProfileClick(activeProfile)"
     />
+  </j-modal>
+  <j-modal
+    size="xs"
+    v-if="activeCommunity"
+    :open="showJoinCommuinityModal"
+    @toggle="(e) => toggleJoinCommunityModal(e.target.open, activeCommunity)"
+  >
+    <j-box v-if="activeCommunity" p="800">
+      <j-flex a="center" direction="column" gap="500">
+        <j-text v-if="activeCommunity.name">{{activeCommunity.name}}</j-text>
+        <j-text
+          v-if="activeCommunity.description"
+          variant="heading-sm"
+          nomargin
+        >
+          {{ activeCommunity.description }}
+        </j-text>
+        <j-button 
+          :disabled="isJoiningCommunity"
+          :loading="isJoiningCommunity"
+          @click="joinCommunity"
+          size="lg"
+          full
+          variant="primary"
+          >
+          Join Community
+        </j-button>
+      </j-flex>
+    </j-box>
   </j-modal>
 </template>
 
@@ -43,7 +73,10 @@ export default defineComponent({
     const memberMentions = ref<MentionTrigger[]>([]);
     const activeProfile = ref<any>({});
     const showProfile = ref(false);
+    const activeCommunity = ref<any>({});
+    const showJoinCommuinityModal = ref(false);
     const bus = useEventEmitter();
+    const isJoiningCommunity = ref(false);
 
     return {
       dataStore,
@@ -52,13 +85,16 @@ export default defineComponent({
       activeProfile,
       showProfile,
       bus,
+      showJoinCommuinityModal,
+      activeCommunity,
+      isJoiningCommunity
     };
   },
   async mounted() {
     this.script = document.createElement("script");
     this.script.setAttribute("type", "module");
     this.script.innerHTML = `
-      import ChatView from 'https://unpkg.com/@junto-foundation/chat-view/dist/main.js';
+      import ChatView from 'file:///home/fayeed/dev/perspective-views/packages/mini-chat-view/dist/main.js';
       if(customElements.get('chat-view') === undefined) 
         customElements.define("chat-view", ChatView);
     `;
@@ -108,10 +144,22 @@ export default defineComponent({
       this.toggleProfile(true, detail.did);
     },
     onPerspectiveClick({ detail }: any) {
+      let community = this.dataStore.getCommunities.find(e => e.neighbourhood.neighbourhoodUrl === detail.uuid)
+
       let channelId = this.dataStore.getChannelByNeighbourhoodUrl(detail.uuid)
         ?.neighbourhood.perspective.uuid;
 
-      if (channelId) {
+      if (!community && !channelId) {
+        // TODO: show modal  
+        this.toggleJoinCommunityModal(true, detail.link)
+      } else if (community && community.neighbourhood.perspective.uuid !== this.community.neighbourhood.perspective.uuid) {
+        this.$router.push({
+          name: "community",
+          params: {
+            communityId: community.neighbourhood.perspective.uuid,
+          },
+        });
+      } else if (channelId) {
         this.$router.push({
           name: "channel",
           params: {
@@ -120,6 +168,9 @@ export default defineComponent({
           },
         });
       }
+    },
+    onLinkClick({ detail }: any) {
+      window.api.send("openLinkInBrowser", detail.url);
     },
     onHideNotificationIndicator({ detail }: any) {
       this.dataStore.setHasNewMessages({
@@ -134,6 +185,14 @@ export default defineComponent({
         this.activeProfile = did;
       }
       this.showProfile = open;
+    },
+    toggleJoinCommunityModal(open: boolean, community?: any): void {
+      if (!open) {
+        this.activeCommunity = undefined;
+      } else {
+        this.activeCommunity = community;
+      }
+      this.showJoinCommuinityModal = open;
     },
     async handleProfileClick(did: string) {
       this.activeProfile = did;
@@ -151,6 +210,18 @@ export default defineComponent({
           },
         });
       }
+    },
+    joinCommunity() {
+      this.isJoiningCommunity = true;
+      this.dataStore
+        .joinCommunity({ joiningLink: this.activeCommunity.url })
+        .then(() => {
+          this.$emit("submit");
+        })
+        .finally(() => {
+          this.isJoiningCommunity = false;
+          this.showJoinCommuinityModal = false;
+        });
     },
   },
 });
