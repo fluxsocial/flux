@@ -91,13 +91,13 @@
           name: 'channel',
           params: {
             communityId: community.neighbourhood.perspective.uuid,
-            channelId: channel.neighbourhood.perspective.uuid,
+            channelId: channel.id,
           },
         }"
         custom
         v-slot="{ navigate, isExactActive }"
         v-for="channel in channels"
-        :key="channel.neighbourhood.perspective.uuid"
+        :key="channel.id"
       >
         <j-popover
           class="community-sidebar__header-menu"
@@ -107,27 +107,24 @@
           <j-menu-item
             slot="trigger"
             class="channel"
-            :class="{ 'channel--muted': channel.state.notifications?.mute }"
+            :class="{ 'channel--muted': channel.notifications?.mute }"
             :selected="isExactActive"
             @click="navigate"
           >
             <j-icon slot="start" size="sm" name="hash"></j-icon>
             {{
-              channel.neighbourhood.perspective.uuid ===
-              community.neighbourhood.perspective.uuid
-                ? "Home"
-                : channel.neighbourhood.name
+              channel.name
             }}
             <j-icon
               size="xs"
               slot="end"
-              v-if="channel?.state.notifications?.mute"
+              v-if="channel?.notifications?.mute"
               name="bell-slash"
             />
             <div
               slot="end"
               class="channel__notification"
-              v-if="channel.state.hasNewMessages"
+              v-if="channel.hasNewMessages"
             ></div>
           </j-menu-item>
           <j-menu slot="content">
@@ -135,7 +132,7 @@
               @click="
                 () =>
                   setChannelNotificationState({
-                    channelId: channel.neighbourhood.perspective.uuid,
+                    channelId: channel.id,
                   })
               "
             >
@@ -143,12 +140,12 @@
                 size="xs"
                 slot="start"
                 :name="
-                  channel?.state.notifications?.mute ? 'bell-slash' : 'bell'
+                  channel?.notifications?.mute ? 'bell-slash' : 'bell'
                 "
               />
               {{
                 `${
-                  channel?.state.notifications?.mute ? "Unmute" : "Mute"
+                  channel?.notifications?.mute ? "Unmute" : "Mute"
                 } Channel`
               }}
             </j-menu-item>
@@ -202,7 +199,7 @@ export default defineComponent({
       const channels = this.getChannelStates()(communityId);
 
       if (this.community.state.hideMutedChannels) {
-        return channels.filter((e) => !e.state.notifications.mute);
+        return channels.filter((e) => !e.notifications.mute);
       }
 
       return channels;

@@ -7,10 +7,6 @@ import {
 import { useAppStore } from "..";
 
 export default {
-  setLanguagesPath(payload: string): void {
-    const state = useAppStore();
-    state.localLanguagesPath = payload;
-  },
   setApplicationStartTime(payload: Date): void {
     const state = useAppStore();
     state.applicationStartTime = payload;

@@ -19,9 +19,7 @@ export async function getTypedExpressionLanguages(
         );
       }
       let expressionType;
-      if (languageRes.name!.endsWith("shortform-expression")) {
-        expressionType = ExpressionTypes.ShortForm;
-      } else if (languageRes.name!.endsWith("group-expression")) {
+      if (languageRes.name!.endsWith("group-expression")) {
         expressionType = ExpressionTypes.GroupExpression;
       } else if (languageRes.name!.endsWith("profile-expression")) {
         expressionType = ExpressionTypes.ProfileExpression;

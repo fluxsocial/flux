@@ -92,16 +92,19 @@ describe("Create Channel", () => {
     // @ts-ignore
     dataStore.addCommunity(community);
 
+    expect(Object.keys(dataStore.neighbourhoods).length).toBe(1);
+
     const channel = await dataStore.createChannel({
       communityId: community.state.perspectiveUuid,
       name: "test",
     });
 
-    expect(Object.keys(dataStore.neighbourhoods).length).toBe(2);
+    expect(Object.keys(dataStore.channels).length).toBe(1);
+
     expect(
-      Object.keys(dataStore.neighbourhoods).find(
-        (e) => e === channel.state.perspectiveUuid
+      Object.keys(dataStore.channels).find(
+        (e) => e === channel.id
       )
-    ).toBe(channel.state.perspectiveUuid);
+    ).toBe(channel.id);
   });
 });

@@ -73,7 +73,7 @@ export default async (payload: Payload): Promise<void> => {
   userStore.setUserProfile(newProfile);
 
   const perspectives = await ad4mClient.perspective.all();
-  const userPerspective = perspectives.find(e => e.name === "Agent Profile");
+  const userPerspective = perspectives.find(e => e.name === "Flux Agent Profile Data");
 
   if (userPerspective) {
     userStore.addAgentProfileProxyPerspectiveId(userPerspective.uuid)

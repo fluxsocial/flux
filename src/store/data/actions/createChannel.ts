@@ -26,9 +26,6 @@ export default async (payload: Payload): Promise<ChannelState> => {
         channelName: payload.name,
         creatorDid,
         sourcePerspective: community.neighbourhood.perspective,
-        membraneType: MembraneType.Inherited,
-        typedExpressionLanguages:
-          community.neighbourhood.typedExpressionLanguages,
       });
 
       dataStore.addChannel({

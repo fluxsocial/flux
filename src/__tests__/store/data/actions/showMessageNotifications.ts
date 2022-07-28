@@ -98,11 +98,11 @@ describe("Show Message Notification", () => {
       // @ts-ignore
       route: {
         params: {
-          channelId: channel.state.perspectiveUuid,
+          channelId: channel.id,
           communityId: community.state.perspectiveUuid,
         },
       },
-      perspectiveUuid: channel.state.perspectiveUuid,
+      perspectiveUuid: channel.name,
       authorDid: lockAgentFixture.did,
       message: "hello",
     });
@@ -130,11 +130,11 @@ describe("Show Message Notification", () => {
       // @ts-ignore
       route: {
         params: {
-          channelId: channel.state.perspectiveUuid,
+          channelId: channel.id,
           communityId: community.state.perspectiveUuid,
         },
       },
-      perspectiveUuid: channel.state.perspectiveUuid,
+      perspectiveUuid: channel.name,
       authorDid: "did:key:zQ3shP8NxwzjZkesAN71piLiSPjyYCZAnH22Cs2nyG5LpCwaC",
       message: "hello",
     });
@@ -166,7 +166,7 @@ describe("Show Message Notification", () => {
           communityId: community.state.perspectiveUuid,
         },
       },
-      perspectiveUuid: channel.state.perspectiveUuid,
+      perspectiveUuid: channel.name,
       authorDid: "did:key:zQ3shP8NxwzjZkesAN71piLiSPjyYCZAnH22Cs2nyG5LpCwaC",
       message: "hello",
     });
@@ -210,7 +210,7 @@ describe("Show Message Notification", () => {
           communityId: community.state.perspectiveUuid,
         },
       },
-      perspectiveUuid: channel.state.perspectiveUuid,
+      perspectiveUuid: channel.name,
       authorDid: "did:key:zQ3shP8NxwzjZkesAN71piLiSPjyYCZAnH22Cs2nyG5LpCwaC",
       message:
         '<p>hello <span data-id="did:key:zQ3shP8NxwzjZkesAN71piLiSPjyYCZAnH22Cs2nyG5LpCwaR">@jhon</span></p>',

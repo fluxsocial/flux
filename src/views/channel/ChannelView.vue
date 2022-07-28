@@ -1,7 +1,8 @@
 <template>
   <perspective-view
     :port="port"
-    :perspective-uuid="channel.neighbourhood.perspective.uuid"
+    :channel="channel.id"
+    :perspective-uuid="channel.sourcePerspective"
     @agent-click="onAgentClick"
     @perspective-click="onPerspectiveClick"
     @hide-notification-indicator="onHideNotificationIndicator"
@@ -58,7 +59,7 @@ export default defineComponent({
     this.script = document.createElement("script");
     this.script.setAttribute("type", "module");
     this.script.innerHTML = `
-      import PerspectiveView from 'https://unpkg.com/@junto-foundation/chat-view/dist/main.js';
+      import PerspectiveView from 'http://127.0.0.1:3030/dist/main.js';
       if(customElements.get('perspective-view') === undefined) 
         customElements.define("perspective-view", PerspectiveView);
     `;
@@ -105,8 +106,7 @@ export default defineComponent({
       this.toggleProfile(true, detail.did);
     },
     onPerspectiveClick({ detail }: any) {
-      let channelId = this.dataStore.getChannelByNeighbourhoodUrl(detail.uuid)
-        ?.neighbourhood.perspective.uuid;
+      let channelId = detail.uuid;
 
       if (channelId) {
         this.$router.push({

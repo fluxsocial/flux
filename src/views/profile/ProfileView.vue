@@ -180,7 +180,6 @@ export default defineComponent({
     },
     setEditLinkModal(value: boolean, area: any): void {
       this.showEditlinkModal = value;
-      console.log("area", area);
       this.editArea = area;
     },
     setShowJoinCommunityModal(value: boolean): void {

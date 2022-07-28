@@ -27,7 +27,7 @@ import { defineComponent, ref, watch } from "vue";
 import ConnectClient from "@/containers/ConnectClient.vue";
 import { mapActions } from "pinia";
 import { useAppStore } from "./store/app";
-import { ApplicationState, ModalsState, NeighbourhoodState } from "@/store/types";
+import { ApplicationState, FeedType, ModalsState, NeighbourhoodState } from "@/store/types";
 import { useRoute, useRouter } from "vue-router";
 import { checkConnection } from "./router";
 import { findAd4mPort } from "./utils/findAd4minPort";
@@ -146,7 +146,7 @@ export default defineComponent({
     async startWatcher() {
       const router = this.router;
       const route = this.route;
-      let watching: string[] = [];
+      const watching: string[] = [];
 
       //Watch for incoming signals from holochain - an incoming signal should mean a DM is inbound
       const newLinkHandler = async (
@@ -157,28 +157,23 @@ export default defineComponent({
         if (link.data!.predicate! === EXPRESSION) {
           try {
             const expression = await retry(async () => {
-              const exp = await MainClient.ad4mClient.expression.get(link.data.target);
+              const exp = await MainClient.ad4mClient.expression.getRaw(link.data.target);
+              const expObj = JSON.parse(exp);
               if (exp) {
-                return { ...exp, data: JSON.parse(exp.data) };
+                return { ...expObj, data: expObj.data };
               } else {
-                return null
+                return null;
               }
             }, {});
 
             console.debug("FOUND EXPRESSION FOR SIGNAL", expression);
-            //Add the expression to the store
-            this.dataStore.addExpressionAndLink({
-              channelId: perspective,
-              link: link,
-              message: expression,
-            });
 
             this.dataStore.showMessageNotification({
               router,
               route,
               perspectiveUuid: perspective,
               authorDid: (expression as any)!.author,
-              message: (expression as any).data.body,
+              message: (expression as any).data,
             });
 
             //Add UI notification on the channel to notify that there is a new message there
@@ -203,9 +198,21 @@ export default defineComponent({
           link.author != this.userStore.getUser?.agent.did
         ) {
           console.log("Joining channel via link signal!");
-          await this.dataStore.joinChannelNeighbourhood({
-            parentCommunityId: perspective,
-            neighbourhoodUrl: link.data!.target!,
+
+          this.dataStore.addChannel({
+            communityId: perspective,
+            channel: {
+                id: link.data.target,
+                name: link.data.target,
+                creatorDid: link.author,
+                sourcePerspective: perspective,
+                hasNewMessages: false,
+                createdAt: link.timestamp,
+                feedType: FeedType.Signaled,
+                notifications: {
+                  mute: false,
+                },
+            },
           });
         }
       };
@@ -213,7 +220,6 @@ export default defineComponent({
       watch(
         this.dataStore.neighbourhoods,
         async (newValue: { [perspectiveUuid: string]: NeighbourhoodState }) => {
-          console.log('wallah', Object.entries(newValue))
           for (let [k, v] of Object.entries(newValue)) {
             if (watching.filter((val) => val == k).length == 0) {
               console.log("Starting watcher on perspective", k);

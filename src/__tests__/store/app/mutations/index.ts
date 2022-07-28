@@ -13,16 +13,6 @@ describe("App Mutations", () => {
     setActivePinia(store);
   });
 
-  test("setLanguagesPath", () => {
-    const appStore = useAppStore();
-
-    expect(appStore.localLanguagesPath).toBe("");
-
-    appStore.setLanguagesPath("user/some/path");
-
-    expect(appStore.localLanguagesPath).toBe("user/some/path");
-  });
-
   test("setApplicationStartTime", () => {
     const appStore = useAppStore();
 

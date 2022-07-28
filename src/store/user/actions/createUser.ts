@@ -6,7 +6,7 @@ import { useAppStore } from "@/store/app";
 import getAgentLinks from "@/utils/getAgentLinks";
 import { resizeImage, dataURItoBlob, blobToDataURL } from "@/utils/profileHelpers";
 import removeTypeName from "@/utils/removeTypeName";
-import { Link, PerspectiveInput } from "@perspect3vism/ad4m";
+import { Link, LinkExpression, PerspectiveInput } from "@perspect3vism/ad4m";
 import { useUserStore } from "..";
 
 export interface Payload {
@@ -37,10 +37,14 @@ export default async ({
       ? await blobToDataURL(resizedImage!)
       : undefined;
 
-      
     const perspectives = await ad4mClient.perspective.all();
-    const userPerspective = perspectives.find(e => e.name === "Agent Profile");
-    const currentLinks = await getAgentLinks(userStore.agent.did!, userPerspective?.uuid);
+    let userPerspective = perspectives.find(e => e.name === "Flux Agent Profile Data");
+    let currentLinks = [] as LinkExpression[];
+    if (userPerspective) {
+      currentLinks = await getAgentLinks(userStore.agent.did!, userPerspective?.uuid);
+    } else {
+      userPerspective = await ad4mClient.perspective.add("Flux Agent Profile Data");
+    };
     const tempLinks = [...currentLinks];
     
     if (profilePicture) {

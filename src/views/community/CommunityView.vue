@@ -131,7 +131,7 @@ export default defineComponent({
     ]),
     goToActiveChannel(communityId: string) {
       if (!communityId) return;
-      const firstChannel = this.community.neighbourhood.linkedPerspectives[0];
+      const firstChannel = this.dataStore.getChannelStates(communityId)[0].id;
       const currentChannelId =
         this.community.state.currentChannelId || firstChannel;
 

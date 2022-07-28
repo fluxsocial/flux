@@ -53,10 +53,7 @@ export default {
         return null;
       }
       const channel = state.channels[neighbourhood?.perspective.uuid];
-      return {
-        neighbourhood,
-        state: channel,
-      };
+      return channel;
     },
 
   getCommunityState:
@@ -68,13 +65,9 @@ export default {
   getChannel:
     (state: DataState) =>
     (channelId: string): ChannelState => {
-      const neighbourhood = state.neighbourhoods[channelId];
       const channel = state.channels[channelId];
 
-      return {
-        neighbourhood,
-        state: channel,
-      } as ChannelState;
+      return channel;
     },
 
   getChannelNeighbourhoods:
@@ -88,15 +81,7 @@ export default {
   getChannelStates:
     (state: DataState) =>
     (communityId: string): ChannelState[] => {
-      const links = state.neighbourhoods[communityId].linkedPerspectives;
-      return links
-        .filter((link, index) => links.indexOf(link) === index)
-        .map((perspectiveUuid) => {
-          return {
-            neighbourhood: state.neighbourhoods[perspectiveUuid],
-            state: state.channels[perspectiveUuid],
-          } as ChannelState;
-        });
+      return Object.values(state.channels).filter((c: ChannelState) => c.sourcePerspective === communityId)
     },
 
   getCommunityMembers:

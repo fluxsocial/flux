@@ -7,7 +7,6 @@ export interface FluxExpressionReference {
 }
 
 export enum ExpressionTypes {
-  ShortForm,
   GroupExpression,
   ProfileExpression,
   Other,

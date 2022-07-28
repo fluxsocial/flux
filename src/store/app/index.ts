@@ -10,7 +10,6 @@ export const useAppStore = defineStore("app", {
       updateState: "not-available",
       windowState: "visible",
       applicationStartTime: new Date(),
-      localLanguagesPath: "",
       modals: {
         showCreateCommunity: false,
         showEditCommunity: false,

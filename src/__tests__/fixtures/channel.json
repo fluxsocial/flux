@@ -1,42 +1,12 @@
 {
-  "neighbourhood": {
-    "name": "Home",
-    "perspective": {
-      "uuid": "c6deef81-f6c6-421a-8f5b-642e2287c027",
-      "name": "Home",
-      "sharedUrl": null,
-      "__typename": "PerspectiveHandle"
-    },
-    "typedExpressionLanguages": [
-      {
-        "languageAddress": "Qmbiw1kWJ9okvtYAd3o4grShmbJuXLCSmt9dog6iAgMQdu",
-        "expressionType": 0
-      },
-      {
-        "languageAddress": "QmUkRSZwuoE1gsJdMRz2W2n2wyQEajfsAcyrTyg3KGhH55",
-        "expressionType": 1
-      },
-      {
-        "languageAddress": "QmNMjaqn9tqC6SrEUUegDcpZPcXqmqKVCfyVgeasixPsas",
-        "expressionType": 2
-      }
-    ],
-    "neighbourhoodUrl": "neighbourhood://842124eeeaeb37f2ef108525280f390e52dec874329c7ac2b9b65636f5d9df27e9f8d7f4ee8d56",
-    "membraneType": 0,
-    "linkedPerspectives": [],
-    "linkedNeighbourhoods": [],
-    "members": [],
-    "currentExpressionLinks": {},
-    "currentExpressionMessages": {},
-    "createdAt": "2021-07-26T13:08:27.239Z",
-    "membraneRoot": "bebd2ac2-1e80-44d2-b807-0163c2bcef40"
-  },
-  "state": {
-    "perspectiveUuid": "c6deef81-f6c6-421a-8f5b-642e2287c027",
-    "hasNewMessages": false,
-    "feedType": 0,
-    "notifications": {
-      "mute": false
-    }
+  "id": "Home",
+  "name": "Home",
+  "creatorDid": "",
+  "createdAt":"2021-07-26T13:08:27.239Z",
+  "sourcePerspective": "bebd2ac2-1e80-44d2-b807-0163c2bcef40",
+  "hasNewMessages": false,
+  "feedType": 0,
+  "notifications": {
+    "mute": false
   }
 }
