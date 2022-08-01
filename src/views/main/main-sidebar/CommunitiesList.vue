@@ -99,7 +99,7 @@ export default defineComponent({
     },
     removeCommunity(id: string) {
       this.$router.push({ name: "home" }).then(() => {
-        this.dataStore.removeCommunity(id);
+        this.dataStore.removeCommunity({communityId: id});
       });
     },
     handleCommunityClick(communityId: string) {

@@ -27,7 +27,7 @@ import { defineComponent, ref, watch } from "vue";
 import ConnectClient from "@/containers/ConnectClient.vue";
 import { mapActions } from "pinia";
 import { useAppStore } from "./store/app";
-import { ApplicationState, ModalsState, NeighbourhoodState } from "@/store/types";
+import { ApplicationState, FeedType, ModalsState, NeighbourhoodState } from "@/store/types";
 import { useRoute, useRouter } from "vue-router";
 import { checkConnection } from "./router";
 import { findAd4mPort } from "./utils/findAd4minPort";
@@ -36,6 +36,8 @@ import { LinkExpression } from "@perspect3vism/ad4m";
 import { CHANNEL, EXPRESSION, MEMBER } from "./constants/neighbourhoodMeta";
 import { useUserStore } from "./store/user";
 import retry from "./utils/retry";
+import { buildCommunity, hydrateState } from "./store/data/hydrateState";
+import { nanoid } from "nanoid";
 
 export default defineComponent({
   name: "App",
@@ -93,6 +95,8 @@ export default defineComponent({
           await findAd4mPort(MainClient.portSearchState === 'found' ? MainClient.port : undefined)
       
           await MainClient.ad4mClient.agent.status();
+
+          await hydrateState()
         }
 
         const { perspective } = await MainClient.ad4mClient.agent.me();
@@ -110,6 +114,8 @@ export default defineComponent({
         this.startWatcher();
 
         this.appStore.setGlobalLoading(false);
+
+        return true;
       } catch (e) {
         console.log('main', {e}, e.message === "signature verification failed");
 
@@ -146,7 +152,7 @@ export default defineComponent({
     async startWatcher() {
       const router = this.router;
       const route = this.route;
-      let watching: string[] = [];
+      const watching: string[] = [];
 
       //Watch for incoming signals from holochain - an incoming signal should mean a DM is inbound
       const newLinkHandler = async (
@@ -157,32 +163,28 @@ export default defineComponent({
         if (link.data!.predicate! === EXPRESSION) {
           try {
             const expression = await retry(async () => {
-              const exp = await MainClient.ad4mClient.expression.get(link.data.target);
+              const exp = await MainClient.ad4mClient.expression.getRaw(link.data.target);
+              const expObj = JSON.parse(exp);
               if (exp) {
-                return { ...exp, data: JSON.parse(exp.data) };
+                return { ...expObj, data: expObj.data };
               } else {
-                return null
+                return null;
               }
             }, {});
 
             console.debug("FOUND EXPRESSION FOR SIGNAL", expression);
-            //Add the expression to the store
-            this.dataStore.addExpressionAndLink({
-              channelId: perspective,
-              link: link,
-              message: expression,
-            });
 
             this.dataStore.showMessageNotification({
               router,
               route,
               perspectiveUuid: perspective,
               authorDid: (expression as any)!.author,
-              message: (expression as any).data.body,
+              message: (expression as any).data,
             });
 
             //Add UI notification on the channel to notify that there is a new message there
             this.dataStore.setHasNewMessages({
+              communityId: perspective,
               channelId: perspective,
               value: true,
             });
@@ -203,9 +205,21 @@ export default defineComponent({
           link.author != this.userStore.getUser?.agent.did
         ) {
           console.log("Joining channel via link signal!");
-          await this.dataStore.joinChannelNeighbourhood({
-            parentCommunityId: perspective,
-            neighbourhoodUrl: link.data!.target!,
+
+          this.dataStore.addChannel({
+            communityId: perspective,
+            channel: {
+                id: nanoid(),
+                name: link.data.target,
+                creatorDid: link.author,
+                sourcePerspective: perspective,
+                hasNewMessages: false,
+                createdAt: link.timestamp,
+                feedType: FeedType.Signaled,
+                notifications: {
+                  mute: false,
+                },
+            },
           });
         }
       };
@@ -213,7 +227,6 @@ export default defineComponent({
       watch(
         this.dataStore.neighbourhoods,
         async (newValue: { [perspectiveUuid: string]: NeighbourhoodState }) => {
-          console.log('wallah', Object.entries(newValue))
           for (let [k, v] of Object.entries(newValue)) {
             if (watching.filter((val) => val == k).length == 0) {
               console.log("Starting watcher on perspective", k);
@@ -221,6 +234,7 @@ export default defineComponent({
               const perspective = await MainClient.ad4mClient.perspective.byUUID(k);
 
               if (perspective) {
+                // @ts-ignore
                 perspective.addListener('link-added', (result) => {
                   console.debug(
                     "Got new link with data",
@@ -241,6 +255,71 @@ export default defineComponent({
         { immediate: true, deep: true }
       );
 
+
+      // @ts-ignore
+      MainClient.ad4mClient.perspective.addPerspectiveAddedListener(async (perspective) => {
+        const proxy = await MainClient.ad4mClient.perspective.byUUID(perspective.uuid);
+        proxy!.addListener('link-added', (link) => {
+          if (link.data!.predicate! === CHANNEL && link.data.target === 'Home') {
+            buildCommunity(proxy!).then((community) => {
+              this.dataStore.addCommunity(community);
+
+              this.dataStore.addChannel({
+                communityId: perspective.uuid,
+                channel: {
+                    id: nanoid(),
+                    name: "Home",
+                    creatorDid: link.author,
+                    sourcePerspective: perspective.uuid,
+                    hasNewMessages: false,
+                    createdAt: new Date().toISOString(),
+                    feedType: FeedType.Signaled,
+                    notifications: {
+                      mute: false,
+                    },
+                },
+              });
+            });
+          }
+        });
+      });
+
+      // @ts-ignore
+      MainClient.ad4mClient.perspective.addPerspectiveRemovedListener((perspective) => {
+        const isCommunity = this.dataStore.getCommunity(perspective);
+
+        if (isCommunity) {
+          this.dataStore.removeCommunity({communityId: perspective});
+        }
+      });
+
+      const allPerspectives = await MainClient.ad4mClient.perspective.all();
+
+      for (const perspective of allPerspectives) {
+        perspective.addListener('link-added', (link) => {
+          if (link.data!.predicate! === CHANNEL && link.data.target === 'Home') {
+            buildCommunity(perspective).then((community) => {
+              this.dataStore.addCommunity(community);
+
+              this.dataStore.addChannel({
+                communityId: perspective.uuid,
+                channel: {
+                    id: nanoid(),
+                    name: "Home",
+                    creatorDid: link.author,
+                    sourcePerspective: perspective.uuid,
+                    hasNewMessages: false,
+                    createdAt: new Date().toISOString(),
+                    feedType: FeedType.Signaled,
+                    notifications: {
+                      mute: false,
+                    },
+                },
+              });
+            });
+          }
+        });
+      }
     }
   },
 });

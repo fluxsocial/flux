@@ -1,6 +1,6 @@
 import { UserState } from "./userprofile";
 import { LocalCommunityState } from "./community";
-import { LocalChannelState } from "./channel";
+import { ChannelState } from "./channel";
 import { NeighbourhoodState } from "./neighbourhood";
 import {
   WindowState,
@@ -19,12 +19,11 @@ export interface State {
 
 export interface DataState {
   communities: { [perspectiveUuid: string]: LocalCommunityState };
-  channels: { [perspectiveUuid: string]: LocalChannelState };
+  channels: { [perspectiveUuid: string]: ChannelState };
   neighbourhoods: { [perspectiveUuid: string]: NeighbourhoodState };
 }
 
 export interface ApplicationState {
-  localLanguagesPath: string;
   windowState: WindowState;
   toast: ToastState;
   applicationStartTime: Date;

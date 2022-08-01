@@ -18,8 +18,6 @@ export interface NeighbourhoodState {
   linkedPerspectives: string[];
   linkedNeighbourhoods: string[];
   members: string[];
-  currentExpressionLinks: { [x: string]: LinkExpression };
-  currentExpressionMessages: { [x: string]: ExpressionAndRef };
 }
 
 export enum MembraneType {

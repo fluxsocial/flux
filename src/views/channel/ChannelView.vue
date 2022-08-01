@@ -1,7 +1,8 @@
 <template>
   <perspective-view
     :port="port"
-    :perspective-uuid="channel.neighbourhood.perspective.uuid"
+    :channel="channel.name"
+    :perspective-uuid="channel.sourcePerspective"
     @agent-click="onAgentClick"
     @perspective-click="onPerspectiveClick"
     @hide-notification-indicator="onHideNotificationIndicator"
@@ -58,7 +59,7 @@ export default defineComponent({
     this.script = document.createElement("script");
     this.script.setAttribute("type", "module");
     this.script.innerHTML = `
-      import PerspectiveView from 'https://unpkg.com/@junto-foundation/chat-view/dist/main.js';
+      import PerspectiveView from 'http://127.0.0.1:3030/dist/main.js';
       if(customElements.get('perspective-view') === undefined) 
         customElements.define("perspective-view", PerspectiveView);
     `;
@@ -96,8 +97,8 @@ export default defineComponent({
       return this.dataStore.getCommunity(communityId as string);
     },
     channel(): ChannelState {
-      const { channelId } = this.$route.params;
-      return this.dataStore.getChannel(channelId as string);
+      const { channelId, communityId } = this.$route.params;
+      return this.dataStore.getChannel(communityId as string, channelId as string)!;
     },
   },
   methods: {
@@ -105,22 +106,27 @@ export default defineComponent({
       this.toggleProfile(true, detail.did);
     },
     onPerspectiveClick({ detail }: any) {
-      let channelId = this.dataStore.getChannelByNeighbourhoodUrl(detail.uuid)
-        ?.neighbourhood.perspective.uuid;
+      let channelId = Object.values(this.dataStore.channels).find(
+        (channel) => channel.sourcePerspective === this.community.neighbourhood.perspective.uuid && detail.uuid === channel.name
+      )?.id;
+      
 
       if (channelId) {
         this.$router.push({
           name: "channel",
           params: {
-            channelId: channelId,
+            channelId,
             communityId: this.community.neighbourhood.perspective.uuid,
           },
         });
       }
     },
     onHideNotificationIndicator({ detail }: any) {
+      const { channelId } = this.$route.params;
+      console.log("hide notification indicator", detail);
       this.dataStore.setHasNewMessages({
-        channelId: detail.uuid,
+        communityId: this.community.neighbourhood.perspective.uuid,
+        channelId: channelId as string,
         value: false,
       });
     },

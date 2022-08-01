@@ -40,7 +40,7 @@ describe("Update Profile", () => {
       .spyOn(ad4mClient.perspective, "all")
       // @ts-ignore
       .mockResolvedValue([{
-        name: "Agent Profile",
+        name: "Flux Agent Profile Data",
         // @ts-ignore
         neighbourhood: null,
         // @ts-ignore

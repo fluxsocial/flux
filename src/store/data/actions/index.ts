@@ -1,6 +1,5 @@
 import createChannel from "./createChannel";
 import createCommunity from "./createCommunity";
-import createExpression from "./createExpression";
 import getNeighbourhoodChannels from "./getNeighbourhoodChannels";
 import getNeighbourhoodMetadata from "./getNeighbourhoodMetadata";
 import getNeighbourhoodMembers from "./getNeighbourhoodMembers";
@@ -9,12 +8,11 @@ import updateCommunity from "./updateCommunity";
 import showMessageNotification from "./showMessageNotification";
 import fetchNeighbourhoodMembers from "./fetchNeighbourhoodMembers";
 import fetchNeighbourhoodMetadata from "./fetchNeighbourhoodMetadata";
-import joinChannelNeighbourhood from "./joinChannelNeighbourhood";
+import removeCommunity from "./removeCommunity";
 
 export default {
   createChannel,
   createCommunity,
-  createExpression,
   getNeighbourhoodChannels,
   getNeighbourhoodMetadata,
   getNeighbourhoodMembers,
@@ -23,5 +21,5 @@ export default {
   showMessageNotification,
   fetchNeighbourhoodMembers,
   fetchNeighbourhoodMetadata,
-  joinChannelNeighbourhood,
+  removeCommunity
 };

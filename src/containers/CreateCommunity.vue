@@ -13,6 +13,11 @@
         <j-text variant="body"> Join an already existing community </j-text>
         <j-icon slot="end" name="chevron-right"></j-icon>
       </j-menu-item>
+      <j-menu-item class="choice-button" size="xl" @click="tabView = 'Load'">
+        <j-text variant="heading-sm">Load community</j-text>
+        <j-text variant="body">Load a existing perspective as community</j-text>
+        <j-icon slot="end" name="chevron-right"></j-icon>
+      </j-menu-item>
     </j-flex>
   </j-box>
 
@@ -94,6 +99,33 @@
           Join Community
         </j-button>
       </j-flex>
+      <div v-if="tabView === 'Load'">
+        <j-flex direction="column" gap="500" v-if="!isCreatingCommunity">
+          <j-text variant="body" v-if="nonFluxPerspectives.length === 0">No perspective found that is not a flux community</j-text>
+          <j-menu-item 
+            v-for="(perspective) of nonFluxPerspectives" 
+            :key="perspective.uuid"
+            class="choice-button" 
+            size="xl" 
+            @click="createCommunityFromPerspective(perspective)"
+          >
+            <j-text variant="heading-sm">{{ perspective.name }}</j-text>
+            <j-icon slot="end" name="chevron-right"></j-icon>
+          </j-menu-item>
+        </j-flex>
+        <div v-if="isCreatingCommunity" style="text-align: center">
+          <j-text variant="heading-sm">
+            Please wait while your community is being created
+          </j-text>
+          <j-text variant="body">
+            Right now this proccess might take a couple of minutes, so please be
+            patient
+          </j-text>
+          <j-flex j="center">
+            <j-spinner size="lg"></j-spinner>
+          </j-flex>
+        </div>
+      </div>
     </j-flex>
   </j-box>
 </template>
@@ -103,6 +135,7 @@ import { isValid } from "@/utils/validation";
 import { defineComponent } from "vue";
 import AvatarUpload from "@/components/avatar-upload/AvatarUpload.vue";
 import { useDataStore } from "@/store/data";
+import { MainClient } from "@/app";
 
 export default defineComponent({
   components: { AvatarUpload },
@@ -123,7 +156,11 @@ export default defineComponent({
       newProfileImage: "",
       isJoiningCommunity: false,
       isCreatingCommunity: false,
+      nonFluxPerspectives: []
     };
+  },
+  mounted() {
+    this.getPerspectives();
   },
   computed: {
     canSubmit(): boolean {
@@ -181,6 +218,52 @@ export default defineComponent({
           this.isCreatingCommunity = false;
         });
     },
+    createCommunityFromPerspective(perspective: any) {
+      this.isCreatingCommunity = true;
+      this.dataStore
+        .createCommunity({
+          perspectiveName: perspective.name,
+          description: this.newCommunityDesc,
+          image: this.newProfileImage,
+          thumbnail: this.newProfileImage,
+          perspective
+        })
+        .then((community: any) => {
+          this.$emit("submit");
+          const channels = this.dataStore.getChannelNeighbourhoods(
+            community.neighbourhood.perspective.uuid
+          );
+
+          this.$router.push({
+            name: "channel",
+            params: {
+              communityId: community.neighbourhood.perspective.uuid,
+              channelId: channels[0].perspective.uuid,
+            },
+          });
+        })
+        .finally(() => {
+          this.isCreatingCommunity = false;
+        });
+    },
+    async getPerspectives() {
+      const keys = Object.keys(this.dataStore.neighbourhoods);
+      const perspectives = await MainClient.ad4mClient.perspective.all();
+
+      const nonFluxPerspectives = perspectives.filter(
+        (perspective) => !keys.includes(perspective.uuid) && perspective.name !== "Agent Profile"
+      );
+
+      // @ts-ignore
+      this.nonFluxPerspectives = nonFluxPerspectives.map((perspective) => {
+        return {
+          name: perspective.name,
+          neighbourhood: perspective.neighbourhood,
+          sharedUrl: perspective.sharedUrl,
+          uuid: perspective.uuid,
+        };
+      });
+    }
   },
 });
 </script>

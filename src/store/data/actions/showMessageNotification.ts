@@ -21,29 +21,29 @@ export default async ({
 }: Payload) => {
   const dataStore = useDataStore();
   const userStore = useUserStore();
+  const { channelId, communityId } = route.params;
 
   const escapedMessage = message.replace(/(\s*<.*?>\s*)+/g, " ");
 
   // Getting the channel & community this message belongs to
-  const channel = dataStore.getChannel(perspectiveUuid);
-  const community = dataStore.getCommunity(channel.neighbourhood.membraneRoot!);
+  const community = dataStore.getCommunity(perspectiveUuid);
+  // TODO: @fayeed change this.
+  const channel = dataStore.getChannel(perspectiveUuid, "Home");
 
   const isMinimized = document.hasFocus();
-
-  const { channelId, communityId } = route.params;
 
   const user = userStore.getUser;
 
   // Only show the notification when the the message is not from self & the active community & channel is different
   if (
     (!isMinimized &&
-      !channel?.state.notifications.mute &&
+      !channel?.notifications.mute &&
       !community?.state.notifications.mute) ||
     (user!.agent.did! !== authorDid &&
       (community?.neighbourhood.perspective.uuid === communityId
-        ? channel?.neighbourhood.perspective.uuid !== channelId
+        ? channel?.id !== channelId
         : true) &&
-      !channel?.state.notifications.mute &&
+      !channel?.notifications.mute &&
       !community?.state.notifications.mute)
   ) {
     const isMentioned = message.includes(
@@ -57,11 +57,11 @@ export default async ({
       const profile = await getProfile(authorDid);
       const name = profile ? profile.username : "Someone";
 
-      title = `${name} mentioned you in #${channel?.neighbourhood.name}}`;
+      title = `${name} mentioned you in #${channel?.name}}`;
       body = escapedMessage;
     } else {
       title = `New message in ${community?.neighbourhood.name}`;
-      body = `#${channel?.neighbourhood.name}: ${escapedMessage}`;
+      body = `#${channel?.name}: ${escapedMessage}`;
     }
 
     if (Notification.permission === "granted") {
@@ -80,7 +80,7 @@ export default async ({
             name: "channel",
             params: {
               communityId: community!.neighbourhood.perspective!.uuid,
-              channelId: channel!.neighbourhood.perspective!.uuid,
+              channelId: channel!.id,
             },
           });
 
